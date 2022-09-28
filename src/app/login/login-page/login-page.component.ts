@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { LoginService } from '../login.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login-page',
@@ -6,11 +8,12 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./login-page.component.css'],
 })
 export class LoginPageComponent implements OnInit {
-  constructor() {}
+  constructor(private loginService : LoginService, private router: Router) {}
 
   ngOnInit(): void {}
 
   onLogin(login: { username: string; password: string }) {
-    // A faire
+    this.loginService.login(login)
+    this.router.navigate(["/chat"])
   }
 }

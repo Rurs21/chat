@@ -14,11 +14,14 @@ export class LoginService {
   }
 
   login(login: { username: string; password: string }) {
-    // A faire
+    let username = login.username
+    localStorage.setItem(LoginService.KEY, username)
+    this.username.next(username)
   }
 
   logout() {
-    // A faire
+    localStorage.removeItem(LoginService.KEY)
+    this.username.next(null)
   }
 
   getUsername(): Observable<string | null> {

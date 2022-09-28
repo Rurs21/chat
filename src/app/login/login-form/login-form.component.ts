@@ -20,6 +20,9 @@ export class LoginFormComponent implements OnInit {
   ngOnInit(): void {}
 
   onLogin() {
-    // A faire
+    this.login.emit({
+      username: this.loginForm.value.username!,
+      password: this.loginForm.value.password!
+    });
   }
 }
