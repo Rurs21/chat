@@ -11,7 +11,7 @@ export class MessagesService {
   constructor() {}
 
   postMessage(message: Message): void {
-    // A faire
+    this.messages.value.push(message)
   }
 
   getMessages(): Observable<Message[]> {
