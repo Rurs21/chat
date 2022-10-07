@@ -11,7 +11,12 @@ export class MessagesService {
   constructor() {}
 
   postMessage(message: Message): void {
-    // A faire
+    // get copy of the messages
+    let newMessages = this.messages.value.slice()
+    // add new message to the array
+    newMessages.push(message)
+    // emit the new messages array
+    this.messages.next(newMessages)
   }
 
   getMessages(): Observable<Message[]> {
