@@ -9,6 +9,7 @@ import org.springframework.web.context.ServletContextAware;
 
 import com.inf5190.chat.auth.model.LoginRequest;
 import com.inf5190.chat.auth.model.LoginResponse;
+import com.inf5190.chat.auth.session.SessionData;
 import com.inf5190.chat.auth.session.SessionDataAccessor;
 import com.inf5190.chat.auth.session.SessionManager;
 
@@ -31,14 +32,15 @@ public class AuthController implements ServletContextAware {
 
     @PostMapping("auth/login")
     public LoginResponse login(@RequestBody LoginRequest loginRequest) {
-        // À faire...
-        return null;
+        SessionData userSession = new SessionData(loginRequest.username());
+        String token = this.sessionManager.addSession(userSession);
+        return new LoginResponse(token);
     }
 
     @PostMapping("auth/logout")
     public void logout() {
-        // À faire...
-        return;
+        String token = this.sessionDataAccessor.getToken(this.servletContext);
+        this.sessionManager.removeSession(token);
     }
 
     @Override
