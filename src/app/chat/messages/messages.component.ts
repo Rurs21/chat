@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { MessagesService } from '../messages.service';
 import { Message } from '../message.model';
 import { Subscription } from 'rxjs';
@@ -8,7 +8,9 @@ import { Subscription } from 'rxjs';
   templateUrl: './messages.component.html',
   styleUrls: ['./messages.component.css']
 })
-export class MessagesComponent implements OnInit, OnDestroy {
+export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild('chatContainer') private chatContainer: ElementRef | undefined;
+
   messages$ = this.messagesService.getMessages();
 
   messages: Message[] | null = null;
@@ -19,10 +21,15 @@ export class MessagesComponent implements OnInit, OnDestroy {
   ) {
     this.messagesSubscription = this.messages$.subscribe(messages => {
       this.messages = messages;
+      this.scrollToBottom();
     })
   }
 
   ngOnInit(): void {}
+
+  ngAfterViewInit() {
+    this.scrollToBottom();
+  }
 
   ngOnDestroy() {
     if (this.messagesSubscription) {
@@ -42,5 +49,12 @@ export class MessagesComponent implements OnInit, OnDestroy {
       }
     }
     return false;
+  }
+
+  scrollToBottom(): void {
+    if (this.chatContainer != null) {
+      let chatContainerElement = this.chatContainer.nativeElement;
+      chatContainerElement.scrollTop = chatContainerElement.scrollHeight;
+    }
   }
 }
