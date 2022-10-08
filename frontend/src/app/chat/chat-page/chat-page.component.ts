@@ -11,7 +11,7 @@ export class ChatPageComponent implements OnInit {
 
   ngOnInit(): void {}
 
-  onQuit() {
-    this.loginService.logout()
+  async onQuit() {
+    await this.loginService.logout()
   }
 }

@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
 import { Message } from './message.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -8,18 +10,26 @@ import { Message } from './message.model';
 export class MessagesService {
   messages = new BehaviorSubject<Message[]>([]);
 
-  constructor() {}
+  constructor(private httpClient: HttpClient) {}
 
-  postMessage(message: Message): void {
-    // get copy of the messages
-    let newMessages = this.messages.value.slice()
-    // add new message to the array
-    newMessages.push(message)
-    // emit the new messages array
-    this.messages.next(newMessages)
+  async postMessage(message: Message): Promise<void> {
+    await firstValueFrom(
+      this.httpClient.post<{ messages: Message[] }>(
+        `${environment.backendUrl}/messages`, message
+      )
+    );
+    this.getMessages();
+    return Promise.resolve();
   }
 
-  getMessages(): Observable<Message[]> {
-    return this.messages.asObservable();
+  async getMessages(): Promise<Observable<Message[]>> {
+    const messagesResponse = await firstValueFrom(
+      this.httpClient.get<Message[]>(
+        `${environment.backendUrl}/messages`
+      )
+    );
+
+    this.messages.next(messagesResponse);
+    return Promise.resolve(this.messages.asObservable());
   }
 }

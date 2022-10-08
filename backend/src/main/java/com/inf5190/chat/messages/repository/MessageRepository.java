@@ -20,13 +20,12 @@ public class MessageRepository {
     private final AtomicLong idGenerator = new AtomicLong(0);
 
     public List<Message> getMessages(Optional<Long> fromId) {
-        // À faire...
-        return new ArrayList<>();
+        return this.messages;
     }
 
     public Message createMessage(Message message) {
-        // À faire...
-        return null;
+        this.messages.add(message);
+        return message;
     }
 
 }

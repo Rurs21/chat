@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { MessagesService } from '../messages.service';
 import { Message } from '../message.model';
-import { Subscription } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-messages',
@@ -11,18 +11,21 @@ import { Subscription } from 'rxjs';
 export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('chatContainer') private chatContainer: ElementRef | undefined;
 
-  messages$ = this.messagesService.getMessages();
+  messages$: Observable<Message[]> | null = null;
 
   messages: Message[] | null = null;
-  messagesSubscription: Subscription;
+  messagesSubscription: Subscription | null = null;
 
   constructor(
     private messagesService: MessagesService,
   ) {
-    this.messagesSubscription = this.messages$.subscribe(messages => {
-      this.messages = messages;
+    this.messagesService.getMessages().then(messages$ => {
+      this.messages$ = messages$;
+      this.messagesSubscription = this.messages$.subscribe(messages => {
+        this.messages = messages;
+      });
       this.scrollToBottom();
-    })
+    });
   }
 
   ngOnInit(): void {}

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -34,7 +34,7 @@ export class LoginService {
     this.username.next(login.username);
     this.token = loginResponse.token;
     // redirect to chat
-    this.router.navigate(["/chat"]);
+    await this.router.navigate(["/chat"]);
   }
 
   async logout() {
@@ -50,7 +50,7 @@ export class LoginService {
     this.username.next(null);
     this.token = null;
     // redirect to login
-    this.router.navigate([""]);
+    await this.router.navigate([""]);
   }
 
   getUsername(): Observable<string | null> {
