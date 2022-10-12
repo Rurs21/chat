@@ -38,14 +38,15 @@ public class MessageController implements ServletContextAware {
         this.sessionDataAccessor = sessionDataAccessor;
     }
 
-    @GetMapping("messages")
+    @GetMapping(ROOT_PATH)
     public List<Message> getMessages() {
         return messageRepository.getMessages(Optional.empty());
     }
 
-    @PostMapping("messages")
+    @PostMapping(ROOT_PATH)
     public void createMessage(@RequestBody Message createMessageRequest) {
         messageRepository.createMessage(createMessageRequest);
+        webSocketManager.notifySessions();
     }
 
     public void setServletContext(ServletContext servletContext) {

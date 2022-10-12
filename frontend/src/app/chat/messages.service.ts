@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
+import { BehaviorSubject, Observable, firstValueFrom, Subscription } from 'rxjs';
 import { Message } from './message.model';
+import { WebsocketService} from '../websocket-service';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -10,7 +11,19 @@ import { environment } from '../../environments/environment';
 export class MessagesService {
   messages = new BehaviorSubject<Message[]>([]);
 
-  constructor(private httpClient: HttpClient) {}
+  events$ = this.websocketService.connect()
+  eventsSubscription: Subscription | null = null;
+
+  constructor(
+    private httpClient: HttpClient,
+    private websocketService: WebsocketService
+  ) {
+    this.eventsSubscription = this.events$.subscribe(
+      notif => {
+          this.getMessages()
+        }
+      )
+  }
 
   async postMessage(message: Message): Promise<void> {
     await firstValueFrom(
@@ -18,7 +31,7 @@ export class MessagesService {
         `${environment.backendUrl}/messages`, message
       )
     );
-    this.getMessages();
+    await this.getMessages();
     return Promise.resolve();
   }
 
