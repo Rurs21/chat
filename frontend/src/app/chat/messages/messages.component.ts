@@ -1,43 +1,32 @@
-import { Component, OnDestroy, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
-import { MessagesService } from '../messages.service';
+import {
+  Component,
+  OnInit,
+  AfterViewInit,
+  Input,
+  ViewChild,
+  ElementRef,
+} from '@angular/core';
 import { Message } from '../message.model';
-import { Observable, Subscription } from 'rxjs';
+
 
 @Component({
   selector: 'app-messages',
   templateUrl: './messages.component.html',
   styleUrls: ['./messages.component.css']
 })
-export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild('chatContainer') private chatContainer: ElementRef | undefined;
+export class MessagesComponent implements OnInit, AfterViewInit {
+  @Input()
+  messages: Message[] = [];
 
-  messages$: Observable<Message[]> | null = null;
+  @ViewChild('chatContainer')
+  private chatContainer: ElementRef | undefined;
 
-  messages: Message[] | null = null;
-  messagesSubscription: Subscription | null = null;
-
-  constructor(
-    private messagesService: MessagesService,
-  ) {
-    this.messagesService.getMessages().then(messages$ => {
-      this.messages$ = messages$;
-      this.messagesSubscription = this.messages$.subscribe(messages => {
-        this.messages = messages;
-      });
-      this.scrollToBottom();
-    });
-  }
+  constructor() {}
 
   ngOnInit(): void {}
 
   ngAfterViewInit() {
     this.scrollToBottom();
-  }
-
-  ngOnDestroy() {
-    if (this.messagesSubscription) {
-      this.messagesSubscription.unsubscribe();
-    }
   }
 
   /** Afficher la date seulement si la date du message précédent est différente du message courant. */

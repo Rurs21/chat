@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, firstValueFrom, Subscription } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, Observable, Subscription } from 'rxjs';
 import { Message } from './message.model';
-import { WebsocketService} from '../websocket-service';
+import { WebsocketService } from '../websocket-service';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -19,30 +19,28 @@ export class MessagesService {
     private websocketService: WebsocketService
   ) {
     this.eventsSubscription = this.events$.subscribe(
-      notif => {
-          this.getMessages()
-        }
-      )
+      notif => this.fetchMessages())
   }
 
-  async postMessage(message: Message): Promise<void> {
+  async postMessage(message: Message) {
     await firstValueFrom(
       this.httpClient.post<{ messages: Message[] }>(
         `${environment.backendUrl}/messages`, message
       )
     );
-    await this.getMessages();
-    return Promise.resolve();
   }
 
-  async getMessages(): Promise<Observable<Message[]>> {
-    const messagesResponse = await firstValueFrom(
+  getMessages(): Observable<Message[]> {
+    this.fetchMessages();
+    return this.messages.asObservable();
+  }
+
+  private async fetchMessages() {
+    const messages = await firstValueFrom(
       this.httpClient.get<Message[]>(
         `${environment.backendUrl}/messages`
       )
     );
-
-    this.messages.next(messagesResponse);
-    return Promise.resolve(this.messages.asObservable());
+    this.messages.next(messages);
   }
 }

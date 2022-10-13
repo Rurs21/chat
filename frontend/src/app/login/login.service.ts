@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -14,7 +13,7 @@ export class LoginService {
   private username = new BehaviorSubject<string | null>(null);
   private token : String | null = null;
 
-  constructor(private httpClient: HttpClient, private router: Router) {
+  constructor(private httpClient: HttpClient) {
     this.username.next(localStorage.getItem(LoginService.USERNAME_KEY));
   }
 
@@ -33,8 +32,6 @@ export class LoginService {
     localStorage.setItem(LoginService.TOKEN_KEY, loginResponse.token);
     this.username.next(login.username);
     this.token = loginResponse.token;
-    // redirect to chat
-    await this.router.navigate(["/chat"]);
   }
 
   async logout() {
@@ -49,8 +46,6 @@ export class LoginService {
     localStorage.removeItem(LoginService.TOKEN_KEY)
     this.username.next(null);
     this.token = null;
-    // redirect to login
-    await this.router.navigate([""]);
   }
 
   getUsername(): Observable<string | null> {

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { LoginService } from '../login.service';
 
 @Component({
@@ -7,11 +8,13 @@ import { LoginService } from '../login.service';
   styleUrls: ['./login-page.component.css'],
 })
 export class LoginPageComponent implements OnInit {
-  constructor(private loginService : LoginService) {}
+  constructor(private router: Router, private loginService : LoginService) {}
 
   ngOnInit(): void {}
 
   onLogin(login: { username: string; password: string }) {
-    this.loginService.login(login)
+    this.loginService.login(login).then(() =>
+      this.router.navigate(['/chat'])
+    );
   }
 }

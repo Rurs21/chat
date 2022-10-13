@@ -1,8 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { LoginService } from '../../login/login.service';
-import { Subscription } from 'rxjs';
-import { MessagesService } from '../messages.service';
 
 @Component({
   selector: 'app-new-message-form',
@@ -10,48 +7,22 @@ import { MessagesService } from '../messages.service';
   styleUrls: ['./new-message-form.component.css']
 })
 export class NewMessageFormComponent implements OnInit {
-  username$ = this.loginService.getUsername();
-
   messageForm = this.fb.group({
     msg: '',
   });
 
-  currentUsername: string | null = null;
-  usernameSubscription: Subscription;
+  @Output()
+  sendMessage = new EventEmitter<string>();
 
-  constructor(
-    private fb: FormBuilder,
-    private loginService: LoginService,
-    private messagesService: MessagesService
-  ) {
-    this.usernameSubscription = this.username$.subscribe((u) => {
-      this.currentUsername = u;
-    });
-  }
+  constructor(private fb: FormBuilder) {}
 
-  ngOnInit(): void {
-  }
-
-  ngOnDestroy(): void {
-    if (this.usernameSubscription) {
-      this.usernameSubscription.unsubscribe();
-    }
-  }
+  ngOnInit(): void {}
 
   onSendMessage() {
-    if (
-      this.currentUsername &&
-      this.messageForm.valid &&
-      this.messageForm.value.msg
-    ) {
-      this.messagesService.postMessage({
-        id: null,
-        text: this.messageForm.value.msg,
-        username: this.currentUsername,
-        timestamp: Date.now(),
-      });
+    if (this.messageForm.valid && this.messageForm.value.msg) {
+      this.sendMessage.emit(this.messageForm.value.msg);
+      this.messageForm.reset();
     }
-    this.messageForm.reset();
   }
 
 }
