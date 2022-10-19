@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, firstValueFrom, Observable, Subscription } from 'rxjs';
 import { Message } from './message.model';
 import { WebsocketService } from '../websocket-service';
@@ -19,7 +19,17 @@ export class MessagesService {
     private websocketService: WebsocketService
   ) {
     this.eventsSubscription = this.events$.subscribe(
-      notif => this.fetchMessages())
+      notif => {
+        let messages = this.messages.value;
+        if (messages.length > 0) {
+          let lastId = messages[messages.length-1].id;
+          this.fetchMessages(lastId).then(newMessages =>
+             this.messages.next(messages.concat(newMessages)));
+        } else {
+          this.fetchMessages(null).then(messages =>
+            this.messages.next(messages));
+        }
+      })
   }
 
   async postMessage(message: Message) {
@@ -31,16 +41,20 @@ export class MessagesService {
   }
 
   getMessages(): Observable<Message[]> {
-    this.fetchMessages();
+    this.fetchMessages(null).then(messages =>
+      this.messages.next(messages));
     return this.messages.asObservable();
   }
 
-  private async fetchMessages() {
-    const messages = await firstValueFrom(
+  private async fetchMessages(fromId: string | null) : Promise<Message[]> {
+    let params = new HttpParams();
+    if (fromId != null)
+      params = params.set('fromId', fromId);
+    return await firstValueFrom(
       this.httpClient.get<Message[]>(
-        `${environment.backendUrl}/messages`
+        `${environment.backendUrl}/messages`,
+        {params: params}
       )
     );
-    this.messages.next(messages);
   }
 }

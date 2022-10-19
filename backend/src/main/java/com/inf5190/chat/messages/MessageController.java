@@ -7,10 +7,7 @@ import com.inf5190.chat.websocket.WebSocketManager;
 
 import javax.servlet.ServletContext;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.ServletContextAware;
 
 import java.util.List;
@@ -39,8 +36,8 @@ public class MessageController implements ServletContextAware {
     }
 
     @GetMapping(ROOT_PATH)
-    public List<Message> getMessages() {
-        return messageRepository.getMessages(Optional.empty());
+    public List<Message> getMessages(@RequestParam Optional<Long> fromId) {
+        return messageRepository.getMessages(fromId);
     }
 
     @PostMapping(ROOT_PATH)

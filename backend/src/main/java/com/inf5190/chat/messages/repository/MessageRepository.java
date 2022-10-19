@@ -20,12 +20,19 @@ public class MessageRepository {
     private final AtomicLong idGenerator = new AtomicLong(0);
 
     public List<Message> getMessages(Optional<Long> fromId) {
-        return this.messages;
+        if (fromId.isPresent()) {
+            int fromIdx = fromId.get().intValue() + 1;
+            return this.messages.subList(fromIdx , this.messages.size());
+        } else {
+            return this.messages;
+        }
     }
 
     public Message createMessage(Message message) {
-        this.messages.add(message);
-        return message;
+        long id = idGenerator.getAndIncrement();
+        Message newMessage = message.withId(id);
+        this.messages.add((int)id, newMessage);
+        return newMessage;
     }
 
 }
