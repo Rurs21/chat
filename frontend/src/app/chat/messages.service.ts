@@ -22,11 +22,11 @@ export class MessagesService {
       notif => {
         let messages = this.messages.value;
         if (messages.length > 0) {
-          let lastId = messages[messages.length-1].id;
+          let lastId = messages[messages.length-1].id!;
           this.fetchMessages(lastId).then(newMessages =>
              this.messages.next(messages.concat(newMessages)));
         } else {
-          this.fetchMessages(null).then(messages =>
+          this.fetchMessages().then(messages =>
             this.messages.next(messages));
         }
       })
@@ -41,14 +41,14 @@ export class MessagesService {
   }
 
   getMessages(): Observable<Message[]> {
-    this.fetchMessages(null).then(messages =>
+    this.fetchMessages().then(messages =>
       this.messages.next(messages));
     return this.messages.asObservable();
   }
 
-  private async fetchMessages(fromId: string | null) : Promise<Message[]> {
+  private async fetchMessages(fromId?: string) : Promise<Message[]> {
     let params = new HttpParams();
-    if (fromId != null)
+    if (fromId !== undefined)
       params = params.set('fromId', fromId);
     return await firstValueFrom(
       this.httpClient.get<Message[]>(
