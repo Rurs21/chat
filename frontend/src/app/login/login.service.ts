@@ -14,6 +14,7 @@ export class LoginService {
   private token : String | null = null;
 
   constructor(private httpClient: HttpClient) {
+    this.token = localStorage.getItem(LoginService.TOKEN_KEY);
     this.username.next(localStorage.getItem(LoginService.USERNAME_KEY));
   }
 
