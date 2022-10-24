@@ -11,6 +11,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.inf5190.chat.auth.filter.AuthFilter;
 
@@ -59,6 +61,11 @@ public class ChatApplication {
 		registrationBean.addUrlPatterns("/messages", "/auth/logout");
 
 		return registrationBean;
+	}
+
+	@Bean
+	public PasswordEncoder getPasswordEncoder() {
+		return new BCryptPasswordEncoder();
 	}
 
 }
