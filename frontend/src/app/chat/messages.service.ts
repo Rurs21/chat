@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, firstValueFrom, Observable, Subscription } from 'rxjs';
-import { Message } from './message.model';
+import { Message, MessageRequest } from './message.model';
 import { WebsocketService } from '../websocket-service';
 import { environment } from '../../environments/environment';
 
@@ -32,7 +32,7 @@ export class MessagesService {
       })
   }
 
-  async postMessage(message: Message) {
+  async postMessage(message: MessageRequest) {
     await firstValueFrom(
       this.httpClient.post<{ messages: Message[] }>(
         `${environment.backendUrl}/messages`, message

@@ -3,6 +3,7 @@ package com.inf5190.chat.messages;
 import com.google.cloud.Timestamp;
 import com.inf5190.chat.auth.session.SessionDataAccessor;
 import com.inf5190.chat.messages.model.Message;
+import com.inf5190.chat.messages.model.MessageRequest;
 import com.inf5190.chat.messages.repository.FirestoreMessage;
 import com.inf5190.chat.messages.repository.MessageRepository;
 import com.inf5190.chat.websocket.WebSocketManager;
@@ -44,8 +45,8 @@ public class MessageController implements ServletContextAware {
     }
 
     @PostMapping(ROOT_PATH)
-    public void createMessage(@RequestBody Message createMessageRequest) throws ExecutionException, InterruptedException {
-        FirestoreMessage newMessage = new FirestoreMessage(createMessageRequest.username(), Timestamp.now(), createMessageRequest.text());
+    public void createMessage(@RequestBody MessageRequest createMessageRequest) throws ExecutionException, InterruptedException {
+        FirestoreMessage newMessage = new FirestoreMessage(createMessageRequest.username(), Timestamp.now(), createMessageRequest.text(), null);
         messageRepository.createMessage(newMessage);
         webSocketManager.notifySessions();
     }

@@ -58,10 +58,9 @@ export class ChatPageComponent implements OnInit, OnDestroy {
   onSendMessage(msg: string) {
     if (this.currentUsername) {
       this.messagesService.postMessage({
-        id: null,
         text: msg,
         username: this.currentUsername,
-        timestamp: Date.now(),
+        imageData: null
       }).then(r => {
         this.chatContainer?.scrollToBottom();
       });
