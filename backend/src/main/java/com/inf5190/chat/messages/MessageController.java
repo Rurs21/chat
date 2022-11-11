@@ -1,7 +1,9 @@
 package com.inf5190.chat.messages;
 
+import com.google.cloud.Timestamp;
 import com.inf5190.chat.auth.session.SessionDataAccessor;
 import com.inf5190.chat.messages.model.Message;
+import com.inf5190.chat.messages.repository.FirestoreMessage;
 import com.inf5190.chat.messages.repository.MessageRepository;
 import com.inf5190.chat.websocket.WebSocketManager;
 
@@ -12,6 +14,7 @@ import org.springframework.web.context.ServletContextAware;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Contrôleur qui gère l'API de messages.
@@ -36,13 +39,14 @@ public class MessageController implements ServletContextAware {
     }
 
     @GetMapping(ROOT_PATH)
-    public List<Message> getMessages(@RequestParam Optional<Long> fromId) {
+    public List<Message> getMessages(@RequestParam Optional<String> fromId) throws ExecutionException, InterruptedException {
         return messageRepository.getMessages(fromId);
     }
 
     @PostMapping(ROOT_PATH)
-    public void createMessage(@RequestBody Message createMessageRequest) {
-        messageRepository.createMessage(createMessageRequest);
+    public void createMessage(@RequestBody Message createMessageRequest) throws ExecutionException, InterruptedException {
+        FirestoreMessage newMessage = new FirestoreMessage(createMessageRequest.username(), Timestamp.now(), createMessageRequest.text());
+        messageRepository.createMessage(newMessage);
         webSocketManager.notifySessions();
     }
 
