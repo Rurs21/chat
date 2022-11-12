@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { LoginService } from 'src/app/login/login.service';
 import { MessagesService } from '../messages.service';
-import { Message } from '../message.model';
+import { ChatImageData, Message } from '../message.model';
 import { MessagesComponent } from '../messages/messages.component';
 
 @Component({
@@ -55,13 +55,12 @@ export class ChatPageComponent implements OnInit, OnDestroy {
     );
   }
 
-  onSendMessage(msg: string) {
+  onSendMessage(msg: { text: string; imageData: ChatImageData | null }) {
     if (this.currentUsername) {
       this.messagesService.postMessage({
-        id: null,
-        text: msg,
+        text: msg.text,
         username: this.currentUsername,
-        timestamp: Date.now(),
+        imageData: msg.imageData
       }).then(r => {
         this.chatContainer?.scrollToBottom();
       });
