@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, firstValueFrom, Observable, Subscription } from 'rxjs';
 import { Message, MessageRequest } from './message.model';
-import { WebsocketService } from '../websocket-service';
+import { WebsocketService } from '../websocket.service';
 import { environment } from '../../environments/environment';
 
 @Injectable({
