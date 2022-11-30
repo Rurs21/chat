@@ -1,5 +1,26 @@
-# TP1
+# INF5190 Chat
 
 Application de messagerie simple.
 
-L'énoncé du TP est disponible [ici](https://github.com/coderunner/INF5190/blob/main/tp/tp1/tp1-angular.pdf).
+## Frontend
+
+**Angular**
+
+Serve frontend web app http://localhost:4200/
+```
+ng serve
+```
+
+## Backend
+
+**Springboot**
+
+Install dependencies and run tests
+```
+./mvnw clean install
+```
+
+Run server http://llocalhost:8080
+```
+./mvnw spring-boot:run
+```
