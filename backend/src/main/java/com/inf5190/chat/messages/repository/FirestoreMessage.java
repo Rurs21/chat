@@ -1,8 +1,8 @@
 package com.inf5190.chat.messages.repository;
+
 import com.google.cloud.Timestamp;
 
 public class FirestoreMessage {
-
     private String username;
     private Timestamp timestamp;
     private String text;
@@ -42,7 +42,11 @@ public class FirestoreMessage {
         this.text = text;
     }
 
-    public String getImageUrl() {return imageUrl;}
+    public String getImageUrl() {
+        return imageUrl;
+    }
 
-    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 }

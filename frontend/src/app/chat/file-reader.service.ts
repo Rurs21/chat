@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ChatImageData } from './message.model';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -15,6 +16,7 @@ export class FileReaderService {
     });
 
     reader.readAsArrayBuffer(file);
+
     const type = file.name.split('.').pop() || '';
     const b = await fileRead;
     return { data: this.arrayBufferToBase64(b), type: type };

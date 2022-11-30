@@ -1,10 +1,11 @@
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { FormBuilder } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { LoginService } from 'src/app/login/login.service';
+import { FileReaderService } from '../file-reader.service';
 import { MessagesService } from '../messages.service';
-import { ChatImageData, Message } from '../message.model';
-import { MessagesComponent } from '../messages/messages.component';
+import { WebsocketService } from '../websocket.service';
 
 @Component({
   selector: 'app-chat-page',
@@ -12,58 +13,64 @@ import { MessagesComponent } from '../messages/messages.component';
   styleUrls: ['./chat-page.component.css'],
 })
 export class ChatPageComponent implements OnInit, OnDestroy {
-  @ViewChild(MessagesComponent)
-  private chatContainer: MessagesComponent | undefined;
-
-  username$ = this.loginService.getUsername();
   messages$ = this.messagesService.getMessages();
+  username$ = this.loginService.getUsername();
+  notifications$ = this.webSocketService.connect();
+
+  messageForm = this.fb.group({
+    msg: '',
+  });
 
   currentUsername: string | null = null;
-  messages: Message[] = [];
-
   usernameSubscription: Subscription;
-  messagesSubscription: Subscription;
+  notificationSubscription: Subscription;
 
   constructor(
+    private fb: FormBuilder,
     private messagesService: MessagesService,
+    private webSocketService: WebsocketService,
     private loginService: LoginService,
+    private fileReaderService: FileReaderService,
     private router: Router
   ) {
     this.usernameSubscription = this.username$.subscribe((u) => {
       this.currentUsername = u;
     });
-    this.messagesSubscription = this.messages$.subscribe((m) => {
-      this.messages = m;
-    });
-
+    this.notificationSubscription = this.notifications$.subscribe(
+      async (n) => await this.messagesService.fetchMessages()
+    );
   }
 
-  ngOnInit(): void {}
+  async ngOnInit() {
+    await this.messagesService.fetchMessages();
+  }
 
   ngOnDestroy(): void {
     if (this.usernameSubscription) {
       this.usernameSubscription.unsubscribe();
     }
-    if (this.messagesSubscription) {
-      this.messagesSubscription.unsubscribe();
+    if (this.notificationSubscription) {
+      this.notificationSubscription.unsubscribe();
+    }
+    this.webSocketService.disconnect();
+  }
+
+  async onSendMessage(event: { text: string; file: File | null }) {
+    if (this.currentUsername) {
+      const imageData = event.file
+        ? await this.fileReaderService.readFile(event.file)
+        : null;
+      await this.messagesService.postMessage({
+        text: event.text,
+        username: this.currentUsername,
+        imageData: imageData,
+      });
     }
   }
 
   async onQuit() {
-    await this.loginService.logout().then(() =>
-      this.router.navigate(['/'])
-    );
-  }
-
-  onSendMessage(msg: { text: string; imageData: ChatImageData | null }) {
-    if (this.currentUsername) {
-      this.messagesService.postMessage({
-        text: msg.text,
-        username: this.currentUsername,
-        imageData: msg.imageData
-      }).then(r => {
-        this.chatContainer?.scrollToBottom();
-      });
-    }
+    this.messagesService.clear();
+    await this.loginService.logout();
+    this.router.navigate(['/']);
   }
 }

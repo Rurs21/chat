@@ -8,13 +8,12 @@ import { LoginService } from '../login.service';
   styleUrls: ['./login-page.component.css'],
 })
 export class LoginPageComponent implements OnInit {
-  constructor(private router: Router, private loginService : LoginService) {}
+  constructor(private router: Router, private loginService: LoginService) {}
 
   ngOnInit(): void {}
 
-  onLogin(login: { username: string; password: string }) {
-    this.loginService.login(login).then(() =>
-      this.router.navigate(['/chat'])
-    );
+  async onLogin(login: { username: string; password: string }) {
+    await this.loginService.login(login);
+    this.router.navigate(['/chat']);
   }
 }

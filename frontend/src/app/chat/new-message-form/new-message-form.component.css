@@ -1,7 +1,7 @@
 form {
-    display: flex;
+  display: flex;
 }
 
 input[type="text"] {
-    flex: 1;
+  flex: 1;
 }

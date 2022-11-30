@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 @Injectable({
@@ -10,12 +10,14 @@ export class WebsocketService {
 
   constructor() {}
 
-  public connect(): Observable<'notif'> {
-    this.ws = new WebSocket(`${environment.wsUrl}/notifications`);
+  public connect() {
+    this.ws = new WebSocket(`${environment.wsServer}/notifications`);
     const events = new Subject<'notif'>();
+
     this.ws.onmessage = () => events.next('notif');
     this.ws.onclose = () => events.complete();
     this.ws.onerror = () => events.error('error');
+
     return events.asObservable();
   }
 

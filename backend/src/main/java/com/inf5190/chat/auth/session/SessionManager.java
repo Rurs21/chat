@@ -1,30 +1,26 @@
 package com.inf5190.chat.auth.session;
 
-import java.time.Instant;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Encoders;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
-
-import org.springframework.stereotype.Repository;
 
 import javax.crypto.SecretKey;
 
-/**
- * Classe qui gère les sessions utilisateur.
- * 
- * Pour le moment, on gère en mémoire.
- */
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Repository;
+
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+
 @Repository
 public class SessionManager {
+    private Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final Map<String, SessionData> sessions = new HashMap<String, SessionData>();
-    private static final String SECRET_KEY_BASE64 = "ZUUuPDo1zw1K9dCBuU+VetaGi3VhfmJE9y15NTaWWjs=";
+    private static final int TWO_HOURS_IN_MS = 2 * 60 * 60 * 1000;
+    private static final String SECRET_KEY_BASE64 = "bT8T1c40oApahfJTDGrKQK+bZg3sOsDCFhcCamHEVkA=";
+    private static final String JWT_AUDIENCE = "inf5190";
     private final SecretKey secretKey;
     private final JwtParser jwtParser;
 
@@ -34,35 +30,24 @@ public class SessionManager {
     }
 
     public String addSession(SessionData authData) {
-        final String token = this.generateToken(authData.username());
-        this.sessions.put(token, authData);
-        return token;
+        final Date now = new Date();
+        return Jwts.builder()
+                .setAudience(JWT_AUDIENCE)
+                .setIssuedAt(now)
+                .setSubject(authData.username())
+                .setExpiration(new Date(now.getTime() + TWO_HOURS_IN_MS))
+                .signWith(this.secretKey).compact();
     }
 
     public void removeSession(String token) {
-        this.sessions.remove(token);
     }
 
     public SessionData getSession(String token) {
         try {
-            Jws<Claims> jws = jwtParser.parseClaimsJws(token);
-            return this.sessions.get(token);
-        } catch (JwtException ex) {
+            return new SessionData(this.jwtParser.parseClaimsJws(token).getBody().getSubject());
+        } catch (JwtException e) {
+            this.logger.info("Invalid token", e);
             return null;
         }
     }
-
-    private String generateToken(String username) {
-        Instant now = Instant.now();
-        Instant expiration = now.plusSeconds(7200);
-
-        return Jwts.builder()
-                //.setAudience("localhost")
-                .setIssuedAt(new Date(now.toEpochMilli()))
-                .setSubject(username)
-                .setExpiration(new Date(expiration.toEpochMilli()))
-                .signWith(this.secretKey)
-                .compact();
-    }
-
 }

@@ -1,74 +1,58 @@
 package com.inf5190.chat.auth;
 
-import javax.servlet.ServletContext;
+import java.util.concurrent.ExecutionException;
 
-import com.inf5190.chat.auth.repository.FirestoreUserAccount;
-import com.inf5190.chat.auth.repository.UserAccountRepository;
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.ServletContextAware;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.inf5190.chat.auth.model.LoginRequest;
 import com.inf5190.chat.auth.model.LoginResponse;
+import com.inf5190.chat.auth.repository.FirestoreUserAccount;
+import com.inf5190.chat.auth.repository.UserAccountRepository;
 import com.inf5190.chat.auth.session.SessionData;
 import com.inf5190.chat.auth.session.SessionDataAccessor;
 import com.inf5190.chat.auth.session.SessionManager;
 
-import java.util.concurrent.ExecutionException;
-
-/**
- * Contrôleur qui gère l'API de login et logout.
- * 
- * Implémente ServletContextAware pour recevoir le contexte de la requête HTTP.
- */
 @RestController()
-public class AuthController implements ServletContextAware {
+public class AuthController {
 
-    private UserAccountRepository userAccountRepository;
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
     private final SessionManager sessionManager;
     private final SessionDataAccessor sessionDataAccessor;
-    private ServletContext servletContext;
+    private final UserAccountRepository userAccountRepository;
 
-    public AuthController(UserAccountRepository userAccountRepository,
-                          PasswordEncoder passwordEncoder,
-                          SessionManager sessionManager,
-                          SessionDataAccessor sessionDataAccessor) {
-        this.userAccountRepository = userAccountRepository;
-        this.passwordEncoder = passwordEncoder;
+    public AuthController(SessionManager sessionManager, SessionDataAccessor sessionDataAccessor,
+            UserAccountRepository userAccountRepository, PasswordEncoder passwordEncoder) {
         this.sessionManager = sessionManager;
         this.sessionDataAccessor = sessionDataAccessor;
+        this.userAccountRepository = userAccountRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("auth/login")
-    public LoginResponse login(@RequestBody LoginRequest loginRequest) throws ExecutionException, InterruptedException {
-        FirestoreUserAccount user = userAccountRepository.getUserAccount(loginRequest.username());
-        if (user == null) {
-            String encodedPassword = passwordEncoder.encode(loginRequest.password());
-            FirestoreUserAccount newUser = new FirestoreUserAccount(loginRequest.username(), encodedPassword);
-            userAccountRepository.setUserAccount(newUser);
-        } else if (!passwordEncoder.matches(loginRequest.password(), user.getEncodedPassword())) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    public LoginResponse login(@RequestBody LoginRequest loginRequest) throws InterruptedException, ExecutionException {
+        final FirestoreUserAccount account = this.userAccountRepository.getUserAccount(loginRequest.username());
+        if (account == null) {
+            String encodedPassword = this.passwordEncoder.encode(loginRequest.password());
+            this.userAccountRepository
+                    .setUserAccount(new FirestoreUserAccount(loginRequest.username(), encodedPassword));
+        } else if (!this.passwordEncoder.matches(loginRequest.password(), account.getEncodedPassword())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-        SessionData userSession = new SessionData(loginRequest.username());
-        String token = this.sessionManager.addSession(userSession);
+        final String token = this.sessionManager.addSession(new SessionData(loginRequest.username()));
         return new LoginResponse(token);
     }
 
     @PostMapping("auth/logout")
-    public void logout() {
-        String token = this.sessionDataAccessor.getToken(this.servletContext);
+    public void logout(HttpServletRequest request) {
+        final String token = this.sessionDataAccessor.getToken(request);
         this.sessionManager.removeSession(token);
-    }
-
-    @Override
-    public void setServletContext(ServletContext servletContext) {
-        this.servletContext = servletContext;
     }
 }

@@ -5,12 +5,12 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { AuthInterceptor } from './login/auth.interceptor';
 import { LoginPageComponent } from './login/login-page/login-page.component';
 import { LoginFormComponent } from './login/login-form/login-form.component';
 import { ChatPageComponent } from './chat/chat-page/chat-page.component';
+import { NewMessageForm } from './chat/new-message-form/new-message-form.component';
 import { MessagesComponent } from './chat/messages/messages.component';
-import { NewMessageFormComponent } from './chat/new-message-form/new-message-form.component';
+import { AuthInterceptor } from './login/auth.interceptor';
 
 @NgModule({
   declarations: [
@@ -18,10 +18,15 @@ import { NewMessageFormComponent } from './chat/new-message-form/new-message-for
     LoginPageComponent,
     LoginFormComponent,
     ChatPageComponent,
+    NewMessageForm,
     MessagesComponent,
-    NewMessageFormComponent,
   ],
-  imports: [BrowserModule, AppRoutingModule, ReactiveFormsModule, HttpClientModule],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    ReactiveFormsModule,
+    HttpClientModule,
+  ],
   providers: [
     {
       provide: HTTP_INTERCEPTORS,

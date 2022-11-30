@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -11,11 +11,11 @@ export class LoginService {
   static TOKEN_KEY = 'token';
 
   private username = new BehaviorSubject<string | null>(null);
-  private token : String | null = null;
+  private token: string | null = null;
 
   constructor(private httpClient: HttpClient) {
-    this.token = localStorage.getItem(LoginService.TOKEN_KEY);
     this.username.next(localStorage.getItem(LoginService.USERNAME_KEY));
+    this.token = localStorage.getItem(LoginService.TOKEN_KEY);
   }
 
   async login(login: { username: string; password: string }) {
@@ -31,22 +31,24 @@ export class LoginService {
 
     localStorage.setItem(LoginService.USERNAME_KEY, login.username);
     localStorage.setItem(LoginService.TOKEN_KEY, loginResponse.token);
-    this.username.next(login.username);
     this.token = loginResponse.token;
+    this.username.next(login.username);
   }
 
   async logout() {
-    await firstValueFrom(
-      this.httpClient.post(
-        `${environment.backendUrl}/auth/logout`,
-        null
-      )
-    );
-
-    localStorage.removeItem(LoginService.USERNAME_KEY)
-    localStorage.removeItem(LoginService.TOKEN_KEY)
-    this.username.next(null);
-    this.token = null;
+    if (this.token) {
+      try {
+        await firstValueFrom(
+          this.httpClient.post(`${environment.backendUrl}/auth/logout`, {})
+        );
+      } catch (error) {
+        console.warn('Could not logout.');
+      }
+      localStorage.removeItem(LoginService.USERNAME_KEY);
+      localStorage.removeItem(LoginService.TOKEN_KEY);
+      this.username.next(null);
+      this.token = null;
+    }
   }
 
   getUsername(): Observable<string | null> {

@@ -1,4 +1,4 @@
 package com.inf5190.chat.messages.model;
 
-public record MessageRequest(String username, String text, ChatImageData chatImageData) {
+public record MessageRequest(String username, String text, ChatImageData imageData) {
 }

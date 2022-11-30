@@ -5,67 +5,94 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import org.springframework.stereotype.Repository;
-
 import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.*;
+import com.google.cloud.Timestamp;
+import com.google.cloud.firestore.DocumentReference;
+import com.google.cloud.firestore.DocumentSnapshot;
+import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.Query;
+import com.google.cloud.firestore.QueryDocumentSnapshot;
+import com.google.cloud.firestore.QuerySnapshot;
+import com.google.cloud.storage.Bucket;
+import com.google.cloud.storage.Bucket.BlobTargetOption;
+import com.google.cloud.storage.Storage.PredefinedAcl;
 import com.google.firebase.cloud.FirestoreClient;
-
+import com.google.firebase.cloud.StorageClient;
 import com.inf5190.chat.messages.model.Message;
-/**
- * Classe qui gère la persistence des messages.
- *
- * En mémoire pour le moment.
- */
+import com.inf5190.chat.messages.model.MessageRequest;
+
+import io.jsonwebtoken.io.Decoders;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Repository;
+import org.springframework.web.server.ResponseStatusException;
+
 @Repository
 public class MessageRepository {
-
     private static final String COLLECTION_NAME = "chatMessages";
-    private static final int MESSAGES_LIMIT = 20;
+    private static final String BUCKET_NAME = "inf5190-chat-1b58a.appspot.com";
+    private static final String IMAGE_PATH_FORMAT = "images/%s.%s";
+    private static final String IMAGE_URL_FORMAT = "https://storage.googleapis.com/%s/%s";
+    private static final int DOCUMENT_LIMIT = 20;
 
-    private final Firestore firestore = FirestoreClient.getFirestore();
+    private Firestore firestore = FirestoreClient.getFirestore();
 
-
-
-    public List<Message> getMessages(Optional<String> fromId) throws ExecutionException, InterruptedException {
-        final CollectionReference collectionRef = firestore.collection(COLLECTION_NAME);
-
-        ApiFuture<QuerySnapshot> getFuture;
+    public List<Message> getMessages(Optional<String> fromId) throws InterruptedException, ExecutionException {
+        Query query = this.firestore.collection(COLLECTION_NAME)
+                .orderBy("timestamp");
 
         if (fromId.isPresent()) {
-            DocumentSnapshot messageFromId = collectionRef.document(fromId.get()).get().get();
-            getFuture = collectionRef.orderBy("timestamp").startAfter(messageFromId).get();
+            DocumentSnapshot snapshot = this.firestore.collection(COLLECTION_NAME)
+                    .document(fromId.get()).get()
+                    .get();
+
+            if (!snapshot.exists()) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+
+            query = query.startAfter(snapshot);
         } else {
-            getFuture = collectionRef.orderBy("timestamp").limit(MESSAGES_LIMIT).get();
+            query = query.limitToLast(DOCUMENT_LIMIT);
         }
 
-        final QuerySnapshot messagesSnapshot = getFuture.get();
-        if (messagesSnapshot.size() > 0) {
-            return messagesSnapshot.getDocuments().stream()
-                    .map(document -> {
-                        FirestoreMessage storeMessage = document.toObject(FirestoreMessage.class);
-                        return new Message(document.getId(),
-                                storeMessage.getUsername(),
-                                storeMessage.getTimestamp().getSeconds(),
-                                storeMessage.getText());
-                    }).collect(Collectors.toList());
-        } else {
-            return null;
+        ApiFuture<QuerySnapshot> querySnapshotFuture = query.get();
+
+        return querySnapshotFuture.get().getDocuments().stream().map(doc -> this.toMessage(doc))
+                .collect(Collectors.toList());
+    }
+
+    public Message createMessage(MessageRequest messageRequest) throws InterruptedException, ExecutionException {
+        DocumentReference ref = this.firestore.collection(COLLECTION_NAME).document();
+
+        String imageUrl = null;
+        if (messageRequest.imageData() != null) {
+            Bucket b = StorageClient.getInstance().bucket(BUCKET_NAME);
+            String path = String.format(IMAGE_PATH_FORMAT, ref.getId(), messageRequest.imageData().type());
+            b.create(path, Decoders.BASE64.decode(messageRequest.imageData().data()),
+                    BlobTargetOption.predefinedAcl(PredefinedAcl.PUBLIC_READ));
+            imageUrl = String.format(IMAGE_URL_FORMAT, BUCKET_NAME, path);
         }
+
+        FirestoreMessage firestoreMessage = new FirestoreMessage(
+                messageRequest.username(),
+                Timestamp.now(),
+                messageRequest.text(),
+                imageUrl);
+
+        ref.create(firestoreMessage).get();
+
+        return this.toMessage(ref.getId(), firestoreMessage);
     }
 
-    public Message createMessage(FirestoreMessage message) throws InterruptedException, ExecutionException {
-        final CollectionReference collectionRef = firestore.collection(COLLECTION_NAME);
-
-        final DocumentReference docRef = collectionRef.document();
-
-        final ApiFuture<WriteResult> apiFuture = docRef.create(message);
-
-        final WriteResult result = apiFuture.get();
-        System.out.println("Operation timestamp: " + result.getUpdateTime().toDate().getTime());
-
-        final Message newMessage = new Message(docRef.getId(), message.getUsername(), message.getTimestamp().getSeconds(), message.getText());
-
-        return newMessage;
+    private Message toMessage(QueryDocumentSnapshot snapshot) {
+        FirestoreMessage firestoreMessage = snapshot.toObject(FirestoreMessage.class);
+        return this.toMessage(snapshot.getId(), firestoreMessage);
     }
+
+    private Message toMessage(String id, FirestoreMessage firestoreMessage) {
+        return new Message(id, firestoreMessage.getUsername(),
+                firestoreMessage.getTimestamp().toDate().getTime(), firestoreMessage.getText(),
+                firestoreMessage.getImageUrl());
+    }
+
 }

@@ -1,12 +1,10 @@
 package com.inf5190.chat;
 
-import com.google.auth.oauth2.GoogleCredentials;
+import java.io.FileInputStream;
+import java.io.IOException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.FirebaseOptions;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -19,37 +17,39 @@ import com.inf5190.chat.auth.filter.AuthFilter;
 import com.inf5190.chat.auth.session.SessionDataAccessor;
 import com.inf5190.chat.auth.session.SessionManager;
 
-import java.io.FileInputStream;
-import java.io.IOException;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
 
-/**
- * Application spring boot.
- */
 @SpringBootApplication
 public class ChatApplication {
-
 	private static final Logger LOGGER = LoggerFactory.getLogger(ChatApplication.class);
+
 	public static void main(String[] args) {
 		try {
 			if (FirebaseApp.getApps().size() == 0) {
-				FileInputStream serviceAccount = new
-						FileInputStream("firebase-key.json");
+				FileInputStream serviceAccount = new FileInputStream("firebase-key.json");
+
 				FirebaseOptions options = FirebaseOptions.builder()
 						.setCredentials(GoogleCredentials.fromStream(serviceAccount))
 						.build();
+
 				LOGGER.info("Initializing Firebase application.");
 				FirebaseApp.initializeApp(options);
 			}
 			LOGGER.info("Firebase application already initialized.");
+
 			SpringApplication.run(ChatApplication.class, args);
 		} catch (IOException e) {
-			System.err.println("Could not initialise application. Please check you service account key path");
+			LOGGER.error("**** Could not initialise application. Please check you service account key path. ****");
 		}
 	}
 
-	/**
-	 * Fonction qui enregistre le filtre d'authorization.
-	 */
+	@Bean
+	public PasswordEncoder getPasswordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
+
 	@Bean
 	public FilterRegistrationBean<AuthFilter> authenticationFilter(
 			SessionDataAccessor sessionDataAccessor,
@@ -61,11 +61,6 @@ public class ChatApplication {
 		registrationBean.addUrlPatterns("/messages", "/auth/logout");
 
 		return registrationBean;
-	}
-
-	@Bean
-	public PasswordEncoder getPasswordEncoder() {
-		return new BCryptPasswordEncoder();
 	}
 
 }

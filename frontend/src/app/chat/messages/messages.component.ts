@@ -1,35 +1,37 @@
 import {
+  AfterViewChecked,
+  ChangeDetectorRef,
   Component,
-  OnInit,
-  AfterViewInit,
-  Input,
-  ViewChild,
   ElementRef,
+  Input,
+  OnInit,
+  ViewChild,
 } from '@angular/core';
 import { Message } from '../message.model';
-
 
 @Component({
   selector: 'app-messages',
   templateUrl: './messages.component.html',
-  styleUrls: ['./messages.component.css']
+  styleUrls: ['./messages.component.css'],
 })
-export class MessagesComponent implements OnInit, AfterViewInit {
+export class MessagesComponent implements OnInit, AfterViewChecked {
+  @ViewChild('chatContainer') private chatContainer: ElementRef | undefined =
+    undefined;
+
   @Input()
-  messages: Message[] = [];
+  messages: Message[] | null = [];
 
-  @ViewChild('chatContainer')
-  private chatContainer: ElementRef | undefined;
-
-  constructor() {}
+  constructor(private changeDetector: ChangeDetectorRef) {}
 
   ngOnInit(): void {}
 
-  ngAfterViewInit() {
-    this.scrollToBottom();
+  ngAfterViewChecked(): void {
+    if (this.chatContainer) {
+      this.chatContainer.nativeElement.scrollTop =
+        this.chatContainer.nativeElement.scrollHeight;
+    }
   }
 
-  /** Afficher la date seulement si la date du message précédent est différente du message courant. */
   showDateHeader(messages: Message[] | null, i: number) {
     if (messages != null) {
       if (i === 0) {
@@ -43,10 +45,7 @@ export class MessagesComponent implements OnInit, AfterViewInit {
     return false;
   }
 
-  scrollToBottom(): void {
-    if (this.chatContainer != null) {
-      let chatContainerElement = this.chatContainer.nativeElement;
-      chatContainerElement.scrollTop = chatContainerElement.scrollHeight;
-    }
+  onImageLoaded() {
+    this.changeDetector.markForCheck();
   }
 }

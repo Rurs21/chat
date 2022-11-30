@@ -7,9 +7,6 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-/**
- * Classe de configuration pour les CORS.
- */
 @Configuration
 @PropertySource("classpath:cors.properties")
 public class CorsConfig {

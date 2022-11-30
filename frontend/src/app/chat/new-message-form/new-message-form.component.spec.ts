@@ -1,18 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ReactiveFormsModule } from '@angular/forms';
 
-import { NewMessageFormComponent } from './new-message-form.component';
+import { NewMessageForm } from './new-message-form.component';
 
-describe('NewMessageFormComponent', () => {
-  let component: NewMessageFormComponent;
-  let fixture: ComponentFixture<NewMessageFormComponent>;
+describe('NewMessageForm', () => {
+  let component: NewMessageForm;
+  let fixture: ComponentFixture<NewMessageForm>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ NewMessageFormComponent ]
-    })
-    .compileComponents();
+      declarations: [NewMessageForm],
+      imports: [ReactiveFormsModule],
+    }).compileComponents();
 
-    fixture = TestBed.createComponent(NewMessageFormComponent);
+    fixture = TestBed.createComponent(NewMessageForm);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

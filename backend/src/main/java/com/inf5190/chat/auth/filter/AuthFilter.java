@@ -17,9 +17,6 @@ import com.inf5190.chat.auth.session.SessionData;
 import com.inf5190.chat.auth.session.SessionDataAccessor;
 import com.inf5190.chat.auth.session.SessionManager;
 
-/**
- * Filtre qui intercepte les requêtes HTTP et valide si elle est autorisée.
- */
 public class AuthFilter implements Filter {
     private static final String BEARER = "Bearer";
 
@@ -39,23 +36,19 @@ public class AuthFilter implements Filter {
         final HttpServletRequest httpRequest = (HttpServletRequest) request;
         final HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        // Si c'est la méthode OPTIONS on laisse passer. C'est une requête
-        // pre-flight pour les CORS.
         if (httpRequest.getMethod().equalsIgnoreCase(HttpMethod.OPTIONS.name())) {
+            // permettre aux requêtes "pre-flight" de passer
             chain.doFilter(request, response);
             return;
         }
 
-        // Si la requête ne contient pas l'en-tête AUTHORIZATION ou ne contient pas le
-        // Bearer, on n'accepte pas la requête.
         final String authHeader = httpRequest.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith(BEARER)) {
+            // si la requête ne contient pas le header et le bearer
             this.sendAuthErrorResponse(httpRequest, httpResponse);
             return;
         }
 
-        // On vérifie si le token est valide sinon on n'accepte pas la
-        // requête.
         final String[] authParts = authHeader.split(" ");
         if (authParts.length != 2 && !this.isValidToken(authParts[1])) {
             this.sendAuthErrorResponse(httpRequest, httpResponse);
@@ -65,28 +58,23 @@ public class AuthFilter implements Filter {
         final String token = authParts[1];
         final SessionData data = this.sessionManager.getSession(token);
 
-        // Si on ne trouve pas la session, on n'accepte pas la requête.
         if (data == null) {
             this.sendAuthErrorResponse(httpRequest, httpResponse);
             return;
         }
 
-        // On place le token et les données de session dans le contexte
-        // pour que les contrôleurs puissent y avoir accès.
-        this.sessionDataAccessor.setToken(httpRequest.getServletContext(), token);
-        this.sessionDataAccessor.setSessionData(httpRequest.getServletContext(), data);
+        this.sessionDataAccessor.setToken(httpRequest, token);
+        this.sessionDataAccessor.setSessionData(httpRequest, data);
 
         chain.doFilter(request, response);
     }
 
     private boolean isValidToken(String token) {
-        // Pour le moment on accepte tous les tokens.
         return true;
     }
 
-    protected void sendAuthErrorResponse(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void sendAuthErrorResponse(HttpServletRequest request, HttpServletResponse response) throws IOException {
         if (request.getRequestURI().contains("auth/logout")) {
-            // Si c'est pour le logout, on retourne simplement 200 OK.
             response.setStatus(HttpServletResponse.SC_OK);
         } else {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);

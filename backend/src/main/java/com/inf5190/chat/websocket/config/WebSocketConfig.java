@@ -10,14 +10,10 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 import com.inf5190.chat.websocket.WebSocketHandler;
 import com.inf5190.chat.websocket.WebSocketManager;
 
-/**
- * Classe de configuration pour les websockets.
- */
 @Configuration
 @EnableWebSocket
 @PropertySource("classpath:cors.properties")
 public class WebSocketConfig implements WebSocketConfigurer {
-
     @Value("${cors.allowedOrigins}")
     private String allowedOrigins;
 
@@ -29,8 +25,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        // Enregistre le handler pour chaque connexion websocket.
         registry.addHandler(new WebSocketHandler(this.webSocketManager), "/notifications")
-            .setAllowedOriginPatterns(this.allowedOrigins.split(","));
+                .setAllowedOriginPatterns(this.allowedOrigins.split(","));
     }
+
 }
