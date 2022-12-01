@@ -17,7 +17,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 export class ChatPageComponent implements OnInit, OnDestroy {
   messages$ = this.messagesService.getMessages();
   username$ = this.loginService.getUsername();
-  notifications$ = this.webSocketService.connect();
+  notifications$ = this.webSocketService.getNotifications();
 
   messageForm = this.fb.group({
     msg: '',
