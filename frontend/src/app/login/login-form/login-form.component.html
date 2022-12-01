@@ -20,7 +20,7 @@
     </div>
     <div class="login"><button type="submit">Connexion</button></div>
   </form>
-  <div *ngIf="showUsernameRequiredError() && showPasswordRequiredError()" class="text-red">
+  <div *ngIf="showUsernameRequiredError() || showPasswordRequiredError()" class="text-red">
     Entrer le nom d'utilisateur et le mot de passe
   </div>
 </div>

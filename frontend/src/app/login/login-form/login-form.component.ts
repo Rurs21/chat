@@ -12,6 +12,8 @@ export class LoginFormComponent implements OnInit {
     password: new FormControl(null, [Validators.required]),
   });
 
+  submitted: boolean = false;
+
   @Output()
   login = new EventEmitter<{ username: string; password: string }>();
 
@@ -32,6 +34,7 @@ export class LoginFormComponent implements OnInit {
   ngOnInit(): void {}
 
   onLogin() {
+    this.submitted = true;
     if (
       this.loginForm.valid &&
       this.loginForm.value.username &&
@@ -41,15 +44,13 @@ export class LoginFormComponent implements OnInit {
         username: this.loginForm.value.username,
         password: this.loginForm.value.password,
       });
-    } else {
-      this.loginForm.markAllAsTouched();
     }
   }
 
   private showError(field: 'username' | 'password', error: string): boolean {
     return (
-      this.loginForm.controls[field].hasError(error) &&
-      (this.loginForm.controls[field].dirty || this.loginForm.controls[field].touched)
+      this.submitted &&
+      this.loginForm.controls[field].hasError(error)
     );
   }
 
