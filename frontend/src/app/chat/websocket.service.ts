@@ -7,7 +7,7 @@ import { environment } from 'src/environments/environment';
 })
 export class WebsocketService {
   private ws: WebSocket | null = null;
-  private events = new Subject<'notif'>();
+  private events: Subject<'notif'> | null = null;
 
   constructor() {}
 
@@ -15,14 +15,15 @@ export class WebsocketService {
     if (this.ws == null) {
       this.connect();
     }
+    this.events = new Subject<'notif'>();
     return this.events.asObservable();
   };
 
   private connect() {
     this.ws = new WebSocket(`${environment.wsServer}/notifications`);
 
-    this.ws.onopen = () => this.events.next('notif');
-    this.ws.onmessage = () => this.events.next('notif');
+    this.ws.onopen = () => this.events!.next('notif');
+    this.ws.onmessage = () => this.events!.next('notif');
     this.ws.onclose = (e) => {
       // Retry every 2 seconds
       setTimeout(() => {
@@ -37,7 +38,7 @@ export class WebsocketService {
 
   public disconnect() {
     if (this.ws != null) {
-      this.ws.onclose = (e) => { this.events.complete() }
+      this.ws.onclose = (e) => { this.events!.complete() }
       this.ws.close();
       this.ws = null;
     }
