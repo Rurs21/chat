@@ -44,11 +44,38 @@ describe('LoginService', () => {
     });
 
     it('should save the token in service and local storage', async () => {
-      // TODO
+      const loginPromise = service.login(loginData);
+
+      const req = httpTestingController.expectOne(
+        'http://127.0.0.1:8080/auth/login'
+      );
+      req.flush({ token: jwtToken });
+
+      // wait for the login to complete
+      await loginPromise;
+
+      expect(service.getToken()).toBe('jwt_token');
+      expect(localStorage.getItem(LoginService.TOKEN_KEY)).toBe('jwt_token');
     });
 
     it('should save and emit the username', async () => {
       // TODO
+      let username: string | null;
+
+      service.getUsername().subscribe((event) => {
+        username = event
+      });
+
+      const loginPromise = service.login(loginData);
+
+      const req = httpTestingController.expectOne(
+        'http://127.0.0.1:8080/auth/login'
+      );
+      req.flush({ token: jwtToken });
+
+      await loginPromise;
+
+      expect(username!).toBe('username');
     });
   });
 
@@ -63,11 +90,30 @@ describe('LoginService', () => {
     });
 
     it('should call POST with login data to auth/logout', async () => {
-      // TODO
+      const logoutPromise = service.logout()
+
+      const req = httpTestingController.expectOne(
+        'http://127.0.0.1:8080/auth/logout'
+      );
+      expect(req.request.method).toBe('POST');
+      req.flush({ token: jwtToken });
+
+      // wait for the login to complete
+      await logoutPromise;
     });
 
     it('should remove the token from the service and local storage', async () => {
-      // TODO
+      const logoutPromise = service.logout()
+
+      const req = httpTestingController.expectOne(
+        'http://127.0.0.1:8080/auth/logout'
+      );
+      req.flush({ token: jwtToken });
+
+      await logoutPromise;
+
+      expect(service.getToken()).toBeNull();
+      expect(localStorage.getItem(LoginService.TOKEN_KEY)).toBeNull();
     });
   });
 });
