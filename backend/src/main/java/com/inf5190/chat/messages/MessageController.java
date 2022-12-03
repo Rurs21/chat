@@ -40,20 +40,33 @@ public class MessageController {
     @GetMapping(ROOT_PATH)
     public List<Message> getMessages(@RequestParam(name = "fromId") Optional<String> fromId)
             throws InterruptedException, ExecutionException {
-        return this.messageRepository.getMessages(fromId);
+        try {
+            return this.messageRepository.getMessages(fromId);
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Unexpected error on get message.");
+        }
     }
 
     @PostMapping(ROOT_PATH)
     public Message newMessage(@RequestBody MessageRequest message, HttpServletRequest request)
             throws InterruptedException, ExecutionException {
-        final SessionData authData = this.sessionDataAccessor.getSessionData(request);
+        try {
+            final SessionData authData = this.sessionDataAccessor.getSessionData(request);
 
-        if (!message.username().equals(authData.username())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            if (!message.username().equals(authData.username()))
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+
+            final Message m = this.messageRepository.createMessage(message);
+            this.webSocketManager.notifySessions();
+            return m;
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Unexpected error on get message.");
         }
-
-        final Message m = this.messageRepository.createMessage(message);
-        this.webSocketManager.notifySessions();
-        return m;
     }
 }

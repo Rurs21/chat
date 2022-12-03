@@ -1,3 +1,4 @@
 <div>
+  <div *ngIf="loginError != null" class="text-red" [innerHTML]='loginError'></div>
   <app-login-form (login)="onLogin($event)"></app-login-form>
 </div>

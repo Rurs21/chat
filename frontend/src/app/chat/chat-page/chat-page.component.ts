@@ -6,6 +6,8 @@ import { LoginService } from 'src/app/login/login.service';
 import { FileReaderService } from '../file-reader.service';
 import { MessagesService } from '../messages.service';
 import { WebsocketService } from '../websocket.service';
+import { MessageRequest } from '../message.model';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-chat-page',
@@ -15,7 +17,7 @@ import { WebsocketService } from '../websocket.service';
 export class ChatPageComponent implements OnInit, OnDestroy {
   messages$ = this.messagesService.getMessages();
   username$ = this.loginService.getUsername();
-  notifications$ = this.webSocketService.connect();
+  notifications$ = this.webSocketService.getNotifications();
 
   messageForm = this.fb.group({
     msg: '',
@@ -37,12 +39,12 @@ export class ChatPageComponent implements OnInit, OnDestroy {
       this.currentUsername = u;
     });
     this.notificationSubscription = this.notifications$.subscribe(
-      async (n) => await this.messagesService.fetchMessages()
+      async (n) => await this.fectchMessages()
     );
   }
 
   async ngOnInit() {
-    await this.messagesService.fetchMessages();
+    await this.fectchMessages()
   }
 
   ngOnDestroy(): void {
@@ -60,7 +62,7 @@ export class ChatPageComponent implements OnInit, OnDestroy {
       const imageData = event.file
         ? await this.fileReaderService.readFile(event.file)
         : null;
-      await this.messagesService.postMessage({
+      await this.postMessage({
         text: event.text,
         username: this.currentUsername,
         imageData: imageData,
@@ -69,8 +71,31 @@ export class ChatPageComponent implements OnInit, OnDestroy {
   }
 
   async onQuit() {
+    await this.cleanAndLogout();
+  }
+
+  private async cleanAndLogout() {
     this.messagesService.clear();
     await this.loginService.logout();
     this.router.navigate(['/']);
   }
+
+  private async fectchMessages() {
+    try {
+      await this.messagesService.fetchMessages()
+    } catch (e) {
+      if (e instanceof HttpErrorResponse && e.status == 403)
+        await this.cleanAndLogout();
+    }
+  }
+
+  private async postMessage(messageRequest: MessageRequest) {
+    try {
+      await this.messagesService.postMessage(messageRequest)
+    } catch (e) {
+      if (e instanceof HttpErrorResponse && e.status == 403)
+        await this.cleanAndLogout();
+    }
+  }
+
 }

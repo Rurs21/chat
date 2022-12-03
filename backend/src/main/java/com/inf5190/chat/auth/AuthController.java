@@ -37,22 +37,36 @@ public class AuthController {
 
     @PostMapping("auth/login")
     public LoginResponse login(@RequestBody LoginRequest loginRequest) throws InterruptedException, ExecutionException {
-        final FirestoreUserAccount account = this.userAccountRepository.getUserAccount(loginRequest.username());
-        if (account == null) {
-            String encodedPassword = this.passwordEncoder.encode(loginRequest.password());
-            this.userAccountRepository
-                    .setUserAccount(new FirestoreUserAccount(loginRequest.username(), encodedPassword));
-        } else if (!this.passwordEncoder.matches(loginRequest.password(), account.getEncodedPassword())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+        try {
+            final FirestoreUserAccount account = this.userAccountRepository.getUserAccount(loginRequest.username());
+            if (account == null) {
+                String encodedPassword = this.passwordEncoder.encode(loginRequest.password());
+                this.userAccountRepository
+                        .setUserAccount(new FirestoreUserAccount(loginRequest.username(), encodedPassword));
+            } else if (!this.passwordEncoder.matches(loginRequest.password(), account.getEncodedPassword())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            }
 
-        final String token = this.sessionManager.addSession(new SessionData(loginRequest.username()));
-        return new LoginResponse(token);
+            final String token = this.sessionManager.addSession(new SessionData(loginRequest.username()));
+            return new LoginResponse(token);
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Unexpected error on get message.");
+        }
     }
 
     @PostMapping("auth/logout")
     public void logout(HttpServletRequest request) {
-        final String token = this.sessionDataAccessor.getToken(request);
-        this.sessionManager.removeSession(token);
+        try {
+            final String token = this.sessionDataAccessor.getToken(request);
+            this.sessionManager.removeSession(token);
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Unexpected error on get message.");
+        }
     }
 }
