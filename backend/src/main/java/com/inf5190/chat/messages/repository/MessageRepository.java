@@ -22,12 +22,16 @@ import com.inf5190.chat.messages.model.MessageRequest;
 
 import io.jsonwebtoken.io.Decoders;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class MessageRepository {
     private static final String COLLECTION_NAME = "messages";
-    private static final String BUCKET_NAME = "inf5190-chat-1b58a.appspot.com";
+    @Autowired
+    @Qualifier("storageBucketName")
+    private String storageBucketName;
 
     private final Firestore firestore;
     private final StorageClient storageClient;
@@ -66,11 +70,11 @@ public class MessageRepository {
 
         String imageUrl = null;
         if (messageRequest.imageData() != null) {
-            Bucket b = this.storageClient.bucket(BUCKET_NAME);
+            Bucket b = this.storageClient.bucket(storageBucketName);
             String path = String.format("images/%s.%s", ref.getId(), messageRequest.imageData().type());
             b.create(path, Decoders.BASE64.decode(messageRequest.imageData().data()),
                     BlobTargetOption.predefinedAcl(PredefinedAcl.PUBLIC_READ));
-            imageUrl = String.format("https://storage.googleapis.com/%s/%s", BUCKET_NAME, path);
+            imageUrl = String.format("https://storage.googleapis.com/%s/%s", storageBucketName, path);
         }
 
         final FirestoreMessage firestoreMessage = new FirestoreMessage(messageRequest.username(), ts,
