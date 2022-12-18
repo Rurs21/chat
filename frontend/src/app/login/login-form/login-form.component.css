@@ -2,10 +2,6 @@
   margin-top: 20px;
 }
 
-.text-red {
-  color: crimson;
-}
-
-.border-red {
-  border-color: crimson;
+.error-message {
+  color: darkred;
 }

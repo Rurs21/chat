@@ -4,12 +4,12 @@ import com.inf5190.chat.auth.session.SessionData;
 import com.inf5190.chat.auth.session.SessionDataAccessor;
 import com.inf5190.chat.messages.model.Message;
 import com.inf5190.chat.messages.model.MessageRequest;
+import com.inf5190.chat.messages.repository.DocumentNotFoundException;
 import com.inf5190.chat.messages.repository.MessageRepository;
 import com.inf5190.chat.websocket.WebSocketManager;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -38,10 +38,11 @@ public class MessageController {
     }
 
     @GetMapping(ROOT_PATH)
-    public List<Message> getMessages(@RequestParam(name = "fromId") Optional<String> fromId)
-            throws InterruptedException, ExecutionException {
+    public List<Message> getMessages(@RequestParam(name = "fromId") Optional<String> fromId) {
         try {
             return this.messageRepository.getMessages(fromId);
+        } catch (DocumentNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
@@ -51,8 +52,7 @@ public class MessageController {
     }
 
     @PostMapping(ROOT_PATH)
-    public Message newMessage(@RequestBody MessageRequest message, HttpServletRequest request)
-            throws InterruptedException, ExecutionException {
+    public Message newMessage(@RequestBody MessageRequest message, HttpServletRequest request) {
         try {
             final SessionData authData = this.sessionDataAccessor.getSessionData(request);
 

@@ -1,5 +1,6 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
+import { FileReaderService } from '../file-reader.service';
 
 @Component({
   selector: 'app-new-message-form',
@@ -16,7 +17,6 @@ export class NewMessageForm implements OnInit {
 
   @Output()
   sendMessage = new EventEmitter<{ text: string; file: File | null }>();
-
   constructor(private fb: FormBuilder) {}
 
   ngOnInit(): void {}

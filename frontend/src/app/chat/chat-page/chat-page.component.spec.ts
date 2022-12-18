@@ -1,6 +1,8 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
+import { MessagesComponent } from '../messages/messages.component';
+import { NewMessageForm } from '../new-message-form/new-message-form.component';
 
 import { ChatPageComponent } from './chat-page.component';
 
@@ -10,7 +12,7 @@ describe('ChatPageComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ChatPageComponent],
+      declarations: [ChatPageComponent, MessagesComponent, NewMessageForm],
       imports: [ReactiveFormsModule, HttpClientTestingModule],
     }).compileComponents();
 
