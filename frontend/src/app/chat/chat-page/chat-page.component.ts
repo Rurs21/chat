@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,8 +7,6 @@ import { LoginService } from 'src/app/login/login.service';
 import { FileReaderService } from '../file-reader.service';
 import { MessagesService } from '../messages.service';
 import { WebsocketService } from '../websocket.service';
-import { MessageRequest } from '../message.model';
-import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-chat-page',
@@ -17,7 +16,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 export class ChatPageComponent implements OnInit, OnDestroy {
   messages$ = this.messagesService.getMessages();
   username$ = this.loginService.getUsername();
-  notifications$ = this.webSocketService.getNotifications();
+  notifications$ = this.webSocketService.connect();
 
   messageForm = this.fb.group({
     msg: '',
@@ -39,12 +38,12 @@ export class ChatPageComponent implements OnInit, OnDestroy {
       this.currentUsername = u;
     });
     this.notificationSubscription = this.notifications$.subscribe(
-      async (n) => await this.fectchMessages()
+      async (n) => await this.fetchMessages()
     );
   }
 
   async ngOnInit() {
-    await this.fectchMessages()
+    await this.fetchMessages();
   }
 
   ngOnDestroy(): void {
@@ -62,40 +61,40 @@ export class ChatPageComponent implements OnInit, OnDestroy {
       const imageData = event.file
         ? await this.fileReaderService.readFile(event.file)
         : null;
-      await this.postMessage({
-        text: event.text,
-        username: this.currentUsername,
-        imageData: imageData,
-      });
+      try {
+        await this.messagesService.postMessage({
+          text: event.text,
+          username: this.currentUsername,
+          imageData: imageData,
+        });
+      } catch (error) {
+        if (error instanceof HttpErrorResponse && error.status === 403) {
+          await this.onQuit();
+        } else {
+          console.error('Impossible de publier le messages.');
+        }
+      }
     }
   }
 
   async onQuit() {
-    await this.cleanAndLogout();
-  }
-
-  private async cleanAndLogout() {
     this.messagesService.clear();
-    await this.loginService.logout();
-    this.router.navigate(['/']);
-  }
-
-  private async fectchMessages() {
     try {
-      await this.messagesService.fetchMessages()
-    } catch (e) {
-      if (e instanceof HttpErrorResponse && e.status == 403)
-        await this.cleanAndLogout();
+      await this.loginService.logout();
+    } finally {
+      this.router.navigate(['/']);
     }
   }
 
-  private async postMessage(messageRequest: MessageRequest) {
+  private async fetchMessages() {
     try {
-      await this.messagesService.postMessage(messageRequest)
-    } catch (e) {
-      if (e instanceof HttpErrorResponse && e.status == 403)
-        await this.cleanAndLogout();
+      await this.messagesService.fetchMessages();
+    } catch (error) {
+      if (error instanceof HttpErrorResponse && error.status === 403) {
+        await this.onQuit();
+      } else {
+        console.error('Impossible de charger les messages.');
+      }
     }
   }
-
 }

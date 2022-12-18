@@ -5,7 +5,7 @@ import { By } from '@angular/platform-browser';
  * Classe de test qui aide à aller chercher des éléments HTML de la page.
  *
  * Elle utilise l'attribut `data-testid=` pour sélectionner les éléments.
- * Par exemple: 
+ * Par exemple:
  *      <input
  *        name="username"
  *        type="text"

@@ -1,7 +1,5 @@
 package com.inf5190.chat.auth;
 
-import java.util.concurrent.ExecutionException;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpStatus;
@@ -36,7 +34,7 @@ public class AuthController {
     }
 
     @PostMapping("auth/login")
-    public LoginResponse login(@RequestBody LoginRequest loginRequest) throws InterruptedException, ExecutionException {
+    public LoginResponse login(@RequestBody LoginRequest loginRequest) {
         try {
             final FirestoreUserAccount account = this.userAccountRepository.getUserAccount(loginRequest.username());
             if (account == null) {
@@ -52,8 +50,7 @@ public class AuthController {
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Unexpected error on get message.");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error on login.");
         }
     }
 
@@ -65,8 +62,7 @@ public class AuthController {
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Unexpected error on get message.");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error on login.");
         }
     }
 }
