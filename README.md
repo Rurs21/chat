@@ -1,6 +1,6 @@
-# INF5190 Chat
+# Chat
 
-Application de messagerie simple.
+Simple instant messaging application
 
 ## Frontend
 
@@ -13,7 +13,7 @@ ng serve
 
 ## Backend
 
-**Springboot**
+**Springboot** (firebase database)
 
 Install dependencies and run tests
 ```
